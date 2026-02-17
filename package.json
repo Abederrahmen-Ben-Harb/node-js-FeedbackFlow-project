@@ -1,0 +1,28 @@
+{
+  "name": "js-feedbackflow-project",
+  "version": "1.0.0",
+  "description": "academy node js project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abederrahmen-Ben-Harb/node-js-FeedbackFlow-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Abederrahmen-Ben-Harb/node-js-FeedbackFlow-project/issues"
+  },
+  "homepage": "https://github.com/Abederrahmen-Ben-Harb/node-js-FeedbackFlow-project#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "express": "^5.2.1",
+    "express-validator": "^7.3.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.2.1"
+  }
+}

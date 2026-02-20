@@ -6,14 +6,14 @@ const { protect } = require('../middlewares/auth.middleware');
 // all routes below this require a valid JWT
 router.use(protect);
 
-router.route('/feedback')
+router.route('/')
     .post(createFeedback)
     .get(getAllFeedback);
 
-router.route('/feedback/:id/upvote')
+router.route('/:id/upvote')
     .put(upvoteFeedback);
 
-router.route('/feedback/:id')
+router.route('/:id')
     .delete(deleteFeedback)
     .put(updateStatus);
 

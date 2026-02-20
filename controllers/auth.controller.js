@@ -1,8 +1,8 @@
 const User = require('../models/User');
 const { generateToken } = require('../utils/jwt');
 
-// @desc    Register a new user
-// @route   POST /api/auth/register
+// Register a new user
+// POST: /api/auth/register
 async function register(req, res) {
   try {
     const { name, email, password, role } = req.body;

@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['user', 'staff', 'admin'],
         default: 'user' 
+    },
+    project: {
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Project',
+        default: null // Admin have not any project
     }
 }, { timestamps: true });
 

@@ -1,13 +1,18 @@
 const Feedback = require('../models/Feedback');
 
 async function createFeedback(req, res) {
+
+  if (!req.user.project) {
+    return res.status(403).json({ message: "You must be assigned to a project to post." });
+  }
   try {
     const { title, description } = req.body;
     
     const feedback = await Feedback.create({
       title,
       description,
-      creator: req.user.id // Tied to the authenticated user
+      creator: req.user.id, // Tied to the authenticated user
+      project: req.user.project // Tied to the user's project
     });
 
     res.status(201).json(feedback);
@@ -16,18 +21,18 @@ async function createFeedback(req, res) {
   }
 };
 
-// @desc    Get all feedback (Authenticated users only)
-// @route   GET /api/feedback
+// Get all feedback (authenticated users only)
+// GET: /api/feedback
 async function getAllFeedback(req, res) {
-  const feedback = await Feedback.find({})
-    .populate('creator', 'name email')
+  const feedback = await Feedback.find({project: req.user.project})
+    .populate('creator', 'name')
     .sort({ createdAt: -1 });
     
   res.json(feedback);
 };
 
-// @desc    Upvote a feedback
-// @route   PUT /api/feedback/:id/upvote
+// Upvote a feedback
+// PUT: /api/feedback/:id/upvote
 async function upvoteFeedback(req, res) {
   const feedback = await Feedback.findById(req.params.id);
 
@@ -50,8 +55,8 @@ async function upvoteFeedback(req, res) {
   res.json(feedback);
 };
 
-// @desc    Delete feedback (Only Creator or Admin)
-// @route   DELETE /api/feedback/:id
+// Delete feedback (Only Creator or Admin)
+// DELETE: /api/feedback/:id
 async function deleteFeedback(req, res) {
   const feedback = await Feedback.findById(req.params.id);
 

@@ -73,6 +73,8 @@ async function deleteFeedback(req, res) {
   res.json({ message: 'Feedback removed' });
 };
 
+// Update feedback status
+// PUT: /api/feedback/:id
 async function updateStatus(req, res) {
   const feedback = await Feedback.findByIdAndUpdate(
     req.params.id,

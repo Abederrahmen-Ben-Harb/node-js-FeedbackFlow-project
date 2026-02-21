@@ -1,7 +1,7 @@
 const { Model } = require('mongoose');
 const User = require('../models/User');
 
-
+// GET: /api/users/profile
 async function getUserProfile(req, res) {
     try {
         // req.user.id comes from middleware
@@ -17,6 +17,7 @@ async function getUserProfile(req, res) {
     }
 }
 
+// PUT: /api/users/profile
 async function updateUserProfile(req, res) {
     const user = await User.findByIdAndUpdate(req.user.id);
 

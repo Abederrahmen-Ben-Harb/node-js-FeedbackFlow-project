@@ -33,8 +33,8 @@ async function register(req, res) {
   }
 };
 
-// @desc    Authenticate user & get token
-// @route   POST /api/auth/login
+// Authenticate user & get token
+// POST: /api/auth/login
 async function login(req, res) {
   try {
     const { email, password } = req.body;

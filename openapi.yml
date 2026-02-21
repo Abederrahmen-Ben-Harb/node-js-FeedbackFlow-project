@@ -1,0 +1,456 @@
+openapi: 3.0.3
+info:
+  title: FeedbackFlow API
+  description: API Node.js pour la gestion de projets et de feedbacks
+  version: 1.0.0
+
+servers:
+  - url: /api
+    description: Base API path
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [user, staff, admin]
+        project:
+          type: string
+          format: objectid
+          nullable: true
+      required: [name, email]
+
+    AuthResponse:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [user, staff, admin]
+        token:
+          type: string
+          description: JWT token
+
+    Project:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectid
+        name:
+          type: string
+        description:
+          type: string
+        admin:
+          type: string
+          format: objectid
+      required: [name]
+
+    Feedback:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [under-review, planned, in-progress, completed]
+          default: under-review
+        creator:
+          type: object
+          properties:
+            _id:
+              type: string
+            name:
+              type: string
+        upvotes:
+          type: array
+          items:
+            type: string
+            format: objectid
+        project:
+          type: string
+          format: objectid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [title, description]
+
+paths:
+  /auth/register:
+    post:
+      summary: Inscription d'un nouvel utilisateur
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                role:
+                  type: string
+                  enum: [user, staff, admin]
+                  default: user
+      responses:
+        '201':
+          description: Utilisateur créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Email déjà utilisé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User already exists
+        '500':
+          description: Erreur serveur
+
+  /auth/login:
+    post:
+      summary: Connexion et obtention du token JWT
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid email or password
+        '500':
+          description: Erreur serveur
+
+  /users/profile:
+    get:
+      summary: Récupérer le profil de l'utilisateur connecté
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profil utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifié
+        '404':
+          description: Utilisateur non trouvé
+        '500':
+          description: Erreur serveur
+    put:
+      summary: Mettre à jour le profil
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Profil mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifié
+        '404':
+          description: Utilisateur non trouvé
+        '500':
+          description: Erreur serveur
+
+  /projects:
+    post:
+      summary: Créer un projet (Admin uniquement)
+      tags: [Projects]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                admin:
+                  type: string
+                  format: objectid
+      responses:
+        '201':
+          description: Projet créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '401':
+          description: Non authentifié ou non admin
+        '500':
+          description: Erreur serveur
+
+  /projects/assign:
+    put:
+      summary: Assigner un utilisateur à un projet (Admin uniquement)
+      tags: [Projects]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, projectId]
+              properties:
+                userId:
+                  type: string
+                  format: objectid
+                projectId:
+                  type: string
+                  format: objectid
+      responses:
+        '200':
+          description: Utilisateur assigné
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User John assigned to project.
+        '401':
+          description: Non authentifié ou non admin
+        '500':
+          description: Erreur serveur
+
+  /feedback:
+    get:
+      summary: Lister tous les feedbacks du projet de l'utilisateur
+      tags: [Feedback]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des feedbacks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Feedback'
+        '401':
+          description: Non authentifié
+        '500':
+          description: Erreur serveur
+    post:
+      summary: Créer un feedback
+      tags: [Feedback]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, description]
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Feedback créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+        '400':
+          description: Données invalides ou utilisateur non assigné à un projet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You must be assigned to a project to post.
+        '401':
+          description: Non authentifié
+        '500':
+          description: Erreur serveur
+
+  /feedback/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: objectid
+    put:
+      summary: Mettre à jour le statut d'un feedback
+      tags: [Feedback]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [under-review, planned, in-progress, completed]
+      responses:
+        '200':
+          description: Feedback mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+        '401':
+          description: Non authentifié
+        '404':
+          description: Feedback non trouvé
+        '500':
+          description: Erreur serveur
+    delete:
+      summary: Supprimer un feedback (créateur ou admin uniquement)
+      tags: [Feedback]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Feedback supprimé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Feedback removed
+        '401':
+          description: Non autorisé à supprimer
+        '404':
+          description: Feedback non trouvé
+        '500':
+          description: Erreur serveur
+
+  /feedback/{id}/upvote:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: objectid
+    put:
+      summary: Upvote ou retirer l'upvote d'un feedback (toggle)
+      tags: [Feedback]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Feedback avec upvotes mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+        '401':
+          description: Non authentifié
+        '404':
+          description: Feedback non trouvé
+        '500':
+          description: Erreur serveur
